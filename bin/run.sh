@@ -1,0 +1,43 @@
+#!/usr/bin/env bash
+# Run the @gpumaxxing bot in the FOREGROUND of this terminal.
+#
+# Press Ctrl-C to stop it cleanly (graceful shutdown via SIGTERM).
+# Close the terminal → bot stops too. Manual control, no system service.
+
+set -euo pipefail
+
+REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+cd "$REPO_DIR"
+
+# Make sure no other instance is already running (would race on Safari).
+if pgrep -f "python.*main.py" >/dev/null; then
+  echo "[run] Another bot is already running. Stopping it first..."
+  pkill -TERM -f "python.*main.py" || true
+  sleep 2
+  if pgrep -f "python.*main.py" >/dev/null; then
+    pkill -KILL -f "python.*main.py" || true
+    sleep 1
+  fi
+fi
+
+# Pre-warm the local LLM and pin it in memory for 24h. Cold-loading the
+# ~23GB model takes ~170s — longer than the bot's per-call timeout. Use
+# OLLAMA_MODEL from .env so a model swap auto-warms the right one.
+if command -v curl >/dev/null 2>&1; then
+  OLLAMA_MODEL_NAME="${OLLAMA_MODEL:-fredrezones55/qwen3.6-35b-a3b-uncensored-hauhaucs-aggressive}"
+  echo "[run] Pre-warming $OLLAMA_MODEL_NAME (keep_alive=24h)..."
+  # think:false matches the bot's runtime payload (qwen3.6 uncensored is a
+  # thinking-mode model — without this it leaks tokens into a separate
+  # `thinking` field and `response` stays empty).
+  curl -fsS --max-time 300 http://localhost:11434/api/generate \
+    -d "{\"model\":\"$OLLAMA_MODEL_NAME\",\"prompt\":\"ok\",\"stream\":false,\"think\":false,\"keep_alive\":\"24h\"}" \
+    >/dev/null 2>&1 && echo "[run] Model warm." || echo "[run] Pre-warm failed (model not pulled yet? ollama not running?). Bot will warm on first call."
+fi
+
+echo "[run] Starting @gpumaxxing bot. Press Ctrl-C to stop."
+echo "[run] Logs also stream to bot.log (tail -F bot.log)."
+echo "────────────────────────────────────────"
+
+# Foreground execution via uv so dependencies come from the project env.
+# Output to terminal AND tee'd to bot.log so the existing log-tail flow works.
+exec uv run python main.py 2>&1 | tee -a "$REPO_DIR/bot.log"

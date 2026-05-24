@@ -1,0 +1,30 @@
+{
+  "live": [
+    "AI datacenter power grid GPUs min_faves:50",
+    "Nvidia Blackwell datacenter energy min_faves:50",
+    "OpenAI Stargate compute power min_faves:50",
+    "xAI Colossus datacenter GPU min_faves:30",
+    "CoreWeave CRWV AI infrastructure min_faves:30",
+    "TeraWulf WULF AI hosting HPC min_faves:20",
+    "IREN AI datacenter Bitcoin mining min_faves:20",
+    "robotics humanoid Figure Tesla Optimus min_faves:30",
+    "defense AI autonomous drones robotics min_faves:30",
+    "nuclear power AI datacenter Oklo min_faves:30",
+    "natural gas power AI datacenter min_faves:30",
+    "AI agents automation workforce min_faves:50",
+    "compute wars export controls GPUs China min_faves:40",
+    "electricity demand AI datacenters grid min_faves:40",
+    "Bittensor decentralized compute AI crypto min_faves:20"
+  ],
+  "hot": [
+    "AI infrastructure min_faves:500",
+    "compute wars min_faves:300",
+    "datacenter civilization min_faves:100",
+    "Nvidia GPUs energy min_faves:300",
+    "AI robotics labor min_faves:300",
+    "AI capex bubble min_faves:300",
+    "power grid datacenter min_faves:200",
+    "autonomous agents economy min_faves:200"
+  ],
+  "history": []
+}
