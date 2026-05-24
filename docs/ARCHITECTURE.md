@@ -80,8 +80,7 @@ main.py
 | `breakout_bot.py` | every 5 min | Fast-trend reaction post |
 | `spicy_bot.py` | every ~80 min | Polarising take or question |
 | `thread_bot.py` | every 4h (idempotent daily) | 4-tweet single-story thread |
-| `digest_thread_bot.py` | every 4h (idempotent daily) | 6-tweet "top 5 stories" recap |
-| `agent.py` monthly mode | 1st of month + manual `--monthly-recap-now` | 3 Monthly Décode Top 10 posts: IA, Crypto, Investissement |
+| `agent.py` | every 30-45m | Original content (Signals, Leaks, etc.) |
 
 ### Reshare
 

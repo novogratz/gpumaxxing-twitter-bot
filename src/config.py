@@ -33,11 +33,10 @@ REPLIED_FILE = os.path.join(_PROJECT_ROOT, "replied_tweets.json")
 ENGAGEMENT_LOG_FILE = os.path.join(_PROJECT_ROOT, "engagement_log.csv")
 DAILY_STATE_FILE = os.path.join(_PROJECT_ROOT, "daily_state.json")
 
-# Daily posting limits. Defaults enforce the 2026 growth mix:
-# 3-5+ original posts/day minimum, led by "Le Décode" insight posts, with
-# quick news takes as the secondary original surface.
+# Daily posting limits. Defaults enforce the GPUMAXXING content engine:
+# ~12 short-form viral tweets + ~5 recurring/medium-form takes per day.
 MAX_NEWS_PER_DAY = int(os.environ.get("MAX_NEWS_PER_DAY", "5"))
-MAX_HOTAKES_PER_DAY = int(os.environ.get("MAX_HOTAKES_PER_DAY", "3"))
+MAX_HOTAKES_PER_DAY = int(os.environ.get("MAX_HOTAKES_PER_DAY", "15"))
 MAX_QUOTES_PER_DAY = int(os.environ.get("MAX_QUOTES_PER_DAY", "40"))
 MAX_REPLIES_PER_CYCLE = int(os.environ.get("MAX_REPLIES_PER_CYCLE", "3"))
 
@@ -61,30 +60,17 @@ BLOCKLIST = {
 # Discovered accounts file (autonomous influencer discovery)
 DISCOVERED_ACCOUNTS_FILE = os.path.join(_PROJECT_ROOT, "discovered_accounts.json")
 
-# CLI/provider selection. Default is local Ollama; set AI_CLI=codex / claude /
-# gemini / opencode at the env level to switch. Claude stays supported but is
-# never reached by default.
-AI_CLI = os.environ.get("AI_CLI", "ollama").strip().lower()
+# Provider selection. Hard-locked to local Ollama.
+AI_CLI = "ollama"
 
-def _default_model(codex_model: str, claude_model: str, gemini_model: str = "gemini-2.0-flash", opencode_model: str = "opencode/big-pickle") -> str:
-    if AI_CLI == "codex":
-        return codex_model
-    if AI_CLI == "gemini":
-        return gemini_model
-    if AI_CLI in {"ollama", "opencode"}:
-        return opencode_model
-    return claude_model
-
-# Models. Codex defaults use the Mini model across every routine surface to
-# fit a Plus-plan style budget. Override NEWS_MODEL / PRIORITY_REPLY_MODEL when
-# a specific cycle genuinely needs the heavier model.
-# Claude defaults stay mid/cheap tier, not Opus.
-NEWS_MODEL = os.environ.get("NEWS_MODEL", _default_model("gpt-5.4-mini", "claude-sonnet-4-6", "gemini-2.0-flash"))
-REPLY_MODEL = os.environ.get("REPLY_MODEL", _default_model("gpt-5.4-mini", "claude-sonnet-4-6", "gemini-1.5-flash"))
-PRIORITY_REPLY_MODEL = os.environ.get("PRIORITY_REPLY_MODEL", _default_model("gpt-5.4-mini", "claude-sonnet-4-6", "gemini-2.0-flash"))
-HOTAKE_MODEL = os.environ.get("HOTAKE_MODEL", _default_model("gpt-5.4-mini", "claude-sonnet-4-6", "gemini-1.5-flash"))
-ROAST_MODEL = os.environ.get("ROAST_MODEL", _default_model("gpt-5.4-mini", "claude-haiku-4-5-20251001", "gemini-1.5-flash"))
-QUOTE_MODEL = os.environ.get("QUOTE_MODEL", _default_model("gpt-5.4-mini", "claude-haiku-4-5-20251001", "gemini-1.5-flash"))
+# Models. 
+OLLAMA_MODEL = os.environ.get("OLLAMA_MODEL", "fredrezones55/qwen3.6-35b-a3b-uncensored-hauhaucs-aggressive")
+NEWS_MODEL = OLLAMA_MODEL
+REPLY_MODEL = OLLAMA_MODEL
+PRIORITY_REPLY_MODEL = NEWS_MODEL
+HOTAKE_MODEL = NEWS_MODEL
+ROAST_MODEL = NEWS_MODEL
+QUOTE_MODEL = NEWS_MODEL
 
 # No budget limits — the bot calls the LLM freely.
 

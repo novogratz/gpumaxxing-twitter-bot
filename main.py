@@ -21,7 +21,7 @@ from apscheduler.schedulers.blocking import BlockingScheduler
 from apscheduler.triggers.interval import IntervalTrigger
 from apscheduler.triggers.cron import CronTrigger
 from src.logger import log
-from src.bot import has_post_slot, post_slot_status, safe_run_bot_cycle, safe_run_daily_news_cycle, safe_run_weekly_news_cycle, safe_run_monthly_news_cycle
+from src.bot import has_post_slot, post_slot_status, safe_run_bot_cycle
 from src.reply_bot import safe_run_reply_cycle
 from src.engage_bot import safe_run_engage_cycle
 from src.notify_bot import safe_run_notify_cycle, safe_run_boost_cycle, safe_run_replyback_cycle
@@ -43,7 +43,7 @@ from src.followback_bot import safe_run_followback_cycle
 from src.pin_bot import safe_run_pin_cycle
 from src.like_bot import safe_run_like_cycle
 from src.viral_followup_bot import safe_run_viral_followup_cycle
-from src.digest_thread_bot import safe_run_digest_thread_cycle
+
 from src.follow_blast_bot import safe_run_follow_blast_cycle
 from src.auto_tune_bot import safe_run_auto_tune_cycle
 from src.self_evolution_agent import safe_run_self_evolution_cycle
@@ -58,7 +58,7 @@ from src.strategy_lab_bot import safe_run_strategy_lab_cycle
 from src.joke_bank import safe_run_joke_bank_cycle
 from src.self_winners import safe_run_self_winners_cycle
 from src.manu_bercy_bot import safe_run_manu_bercy_cycle
-from src.recap_thread_bot import safe_run_recap_thread_cycle
+
 from src.buzz_hunter_bot import safe_run_buzz_hunter_cycle
 from src.marquee_follow_bot import safe_run_marquee_follow_cycle
 from src.heartbeat_bot import safe_run_heartbeat
@@ -70,7 +70,7 @@ from src.follower_tracker_bot import safe_run_follower_tracker_cycle
 from src.x_home_scout_bot import safe_run_home_scout_cycle
 from src.chain_reply_bot import safe_run_chain_reply_cycle
 from src.youtube_brief_bot import safe_run_youtube_brief_cycle
-from src.morning_recap_bot import safe_run_morning_recap_cycle
+
 from src import health  # noqa: F401  (used by safe_run wrappers via record_success/_failure)
 from src.config import ENABLE_AI_DISCOVERY, ENABLE_AI_MAINTENANCE, _LIVE_STRATEGY_FILE as LIVE_STRATEGY_FILE
 
@@ -205,7 +205,6 @@ def main():
     parser = argparse.ArgumentParser(description="@gpumaxxing AI Twitter bot")
     parser.add_argument("--post-only", action="store_true", help="Run only the post bot")
     parser.add_argument("--reply-only", action="store_true", help="Run only the reply bot")
-    parser.add_argument("--monthly-recap-now", action="store_true", help="Post the monthly Top 10 Décode recap now, then exit")
     parser.add_argument("--dry-run", action="store_true", help="Print actions without posting")
     args = parser.parse_args()
 
@@ -215,10 +214,6 @@ def main():
 
     if args.dry_run:
         log.info("DRY RUN MODE - no tweets will be posted")
-
-    if args.monthly_recap_now:
-        safe_run_monthly_news_cycle(force_all=True)
-        return
 
     scheduler = BlockingScheduler()
 
@@ -299,15 +294,10 @@ def main():
         if not _quiet_skip("REPLYBACK"):
             safe_run_replyback_cycle()
 
-    # Startup news burst: fire Daily Décodes immediately. Monthly recaps are
-    # handled by their own cron/manual command so a restart doesn't repost
-    # the whole monthly set.
-    if not args.reply_only:
-        log.info("Bot started! Firing remaining daily Décodes now; already-shipped topics stay locked.")
-        safe_run_daily_news_cycle(force_all=False)
-
     # Then warm up the engagement loop with a direct-reply cycle.
     if not args.post_only:
+        log.info("Bot started! Firing the first viral post immediately...")
+        safe_run_bot_cycle()
         log.info("Now warming up the reply loop...")
         safe_run_direct_reply_cycle()
 
@@ -321,25 +311,13 @@ def main():
 
     # Schedule jobs
     if not args.reply_only:
-        # 2026-05-24 growth strategy: ship original analysis during global
-        # crypto peak, evenings UTC, instead of the old early-EST window.
-        log.info("News bot DAILY: cron at 19:00 UTC (= evening global crypto peak).")
+        # Schedule the post job
+        first_post = post_interval_minutes()
+        log.info(f"Post bot: next check in {first_post} minutes.")
         scheduler.add_job(
-            safe_run_daily_news_cycle,
-            trigger=CronTrigger(hour=19, minute=0, timezone="UTC"),
-            id="daily_news_job",
-        )
-        log.info("News bot WEEKLY: cron Fridays at 19:30 UTC.")
-        scheduler.add_job(
-            safe_run_weekly_news_cycle,
-            trigger=CronTrigger(day_of_week="fri", hour=19, minute=30, timezone="UTC"),
-            id="weekly_news_job",
-        )
-        log.info("News bot MONTHLY: cron on the 23rd at 20:00 UTC (= monthly Top 10).")
-        scheduler.add_job(
-            safe_run_monthly_news_cycle,
-            trigger=CronTrigger(day=23, hour=20, minute=0, timezone="UTC"),
-            id="monthly_news_job",
+            reschedule_and_post,
+            trigger=IntervalTrigger(minutes=first_post),
+            id="post_job",
         )
 
     if not args.post_only:
@@ -620,16 +598,7 @@ def main():
             id="viral_followup_job",
         )
 
-        # Daily digest thread — once/day, idempotent, fires every 4h to
-        # catch up after restart. Different from thread_bot (single-story)
-        # — this one bundles 5 stories into a recap thread. Highly shareable
-        # format on FR Twitter.
-        log.info("Digest thread bot: 1 daily 5-story FR recap thread (every 4h, idempotent).")
-        scheduler.add_job(
-            safe_run_digest_thread_cycle,
-            trigger=IntervalTrigger(hours=4),
-            id="digest_thread_job",
-        )
+
 
         # Follow blast bot — bulk-follow ~30 FR niche accounts every 30 min.
         # Highest-leverage net-new follower acquisition: ~120/hour follow
@@ -795,15 +764,7 @@ def main():
                 trigger=IntervalTrigger(hours=1),
                 id="self_winners_job",
             )
-            # Weekly Sunday recap thread — bot self-gates to Sunday 10-13h
-            # Paris and posts once per Sunday. Hourly tick = robust to
-            # missed checks within the window.
-            log.info("Sunday recap thread: weekly Décode roundup every Sunday ~11h Paris.")
-            scheduler.add_job(
-                safe_run_recap_thread_cycle,
-                trigger=IntervalTrigger(hours=1),
-                id="recap_thread_job",
-            )
+
             # Manu de Bercy stays disabled. 2026-05-23: re-enabled buzz_hunter
             # as a WEEKLY viral attempt (Sundays 11 AM EST) — user mandate:
             # "make some buzz every week, don't do a lot of try-hard posts
@@ -904,15 +865,7 @@ def main():
             id="youtube_brief_job",
         )
 
-        # Morning recap thread — fires every hour but only ships once
-        # in the 07:00-10:00 Paris window (idempotent daily). Daily
-        # ritual + ready video opener.
-        log.info("Morning recap: 4-tweet English thread daily in morning window (hourly check).")
-        scheduler.add_job(
-            safe_run_morning_recap_cycle,
-            trigger=IntervalTrigger(hours=1),
-            id="morning_recap_job",
-        )
+
 
         # ============================================================
         # HOT-RELOAD WATCHDOG (user mandate 2026-05-18 "I want the

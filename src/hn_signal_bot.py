@@ -119,17 +119,27 @@ def run_signal_cycle():
         log.info("[HN-SIGNAL] Reddit crypto scrape failed:")
         traceback.print_exc()
 
-    # Sort by score desc, dedup by url, cap at 20.
-    items.sort(key=lambda x: x["score"], reverse=True)
+    # Dedup by url, cap at 20.
     seen = set()
     unique = []
-    for it in items:
-        if it["url"] in seen:
-            continue
-        seen.add(it["url"])
-        unique.append(it)
-        if len(unique) >= 20:
-            break
+    
+    # Load existing signals to merge
+    existing = []
+    if os.path.exists(SIGNAL_FILE):
+        try:
+            with open(SIGNAL_FILE, "r") as f:
+                d = json.load(f)
+                existing = d.get("items", [])
+        except Exception:
+            pass
+    
+    # Merge: current scrape items first (they are freshest/highest score now)
+    for it in items + existing:
+        if it.get("url") and it["url"] not in seen:
+            seen.add(it["url"])
+            unique.append(it)
+            if len(unique) >= 30:
+                break
 
     payload = {
         "ts": datetime.now().isoformat(),
@@ -167,8 +177,8 @@ def render_signal_block(max_items: int = 8) -> str:
              " trusted-source article from your WebSearch, prefer it —"
              " you're probably the first to react.)\n"]
     for it in items:
-        lines.append(f"- [{it.get('src','?')} {it.get('score',0)} pts] {it.get('title','')[:160]}")
-        lines.append(f"  {it.get('url','')}")
+        lines.append(f"- STORY: {it.get('title','')[:160]}")
+        lines.append(f"  URL: {it.get('url','')}")
     return "\n".join(lines)
 
 

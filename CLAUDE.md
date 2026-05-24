@@ -42,9 +42,7 @@ startup valuation). Prompts now explicitly prefer `DERNIER/Exclusif` +
 actor + exact number + consequence, and avoid abstract standalone one-liners
 that do not carry a verifiable fact.
 
-Monthly recaps: `python main.py --monthly-recap-now` forces three Monthly
-Décode Top 10 posts (IA, Crypto, Investissement). Scheduled monthly on the
-1st at 8 AM New York. Big-post discovery is enabled for reposts/replies, but
+Big-post discovery is enabled for reposts/replies, but
 freshness gates remain strict: reposts stay under `RETWEET_MAX_AGE_HOURS`,
 direct replies under `DIRECT_REPLY_MAX_AGE_MINUTES`.
 

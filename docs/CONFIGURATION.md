@@ -39,12 +39,12 @@ Original content uses LLM cycles + appears on the profile feed; the cap balances
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MAX_NEWS_PER_DAY` | `5` | Real sourced Décode insight posts. |
-| `MAX_HOTAKES_PER_DAY` | `3` | Quick takes on AI / crypto / macro stories. |
+| `MAX_NEWS_PER_DAY` | `5` | Recurring/medium-form takes following the GPUMAXXING engine. |
+| `MAX_HOTAKES_PER_DAY` | `15` | Short-form viral tweets (Signals, Leaks, etc.). |
 | `MAX_BREAKOUTS_PER_DAY` | `4` | Breakout reactions to viral stories. |
 | `MAX_SPICY_PER_DAY` | `4` | Polarizing takes / questions. |
 
-Threads are 1/day each (`thread_bot` and `digest_thread_bot`) — non-overridable, idempotent state file.
+Threads are 1/week (`thread_bot`) — non-overridable, idempotent state file.
 
 ---
 

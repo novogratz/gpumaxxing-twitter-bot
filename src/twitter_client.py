@@ -192,6 +192,31 @@ def post_tweet(text: str, image_path: str = None):
         _like_own_latest_tweet()
 
 
+def post_tweet_with_reply(text: str, reply_text: str = None, image_path: str = None):
+    """Post a tweet and optionally reply to it immediately."""
+    post_tweet(text, image_path=image_path)
+    if not reply_text:
+        return
+    
+    with _safari_lock:
+        log.info(f"[POST] Replying to own latest tweet with source URL...")
+        # Open profile to find the latest tweet
+        webbrowser.open(BOT_PROFILE_URL)
+        time.sleep(5)
+        # Navigate into the first tweet (the one we just posted)
+        _navigate_to_first_tweet()
+        time.sleep(3)
+        # Press 'r' to reply
+        _run_applescript('tell application "System Events" to keystroke "r"')
+        time.sleep(2)
+        _paste_text(reply_text)
+        time.sleep(1)
+        _run_applescript('tell application "System Events" to keystroke return using command down')
+        time.sleep(2)
+        close_front_tab()
+        log.info("[POST] Reply with URL posted!")
+
+
 def _post_tweet_with_image(text: str, image_path: str):
     """Compose a tweet with an attached image. Caller must already hold _safari_lock."""
     import os as _os
