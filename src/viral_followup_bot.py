@@ -43,7 +43,7 @@ Your original tweet:
 
 Your job: write ONE short follow-up sentence, posted as a reply to your own tweet, that EXTENDS the joke or lands ONE MORE LAYER.
 
-LANGUAGE: match the language of the original tweet. English -> English follow-up. French -> French follow-up. No mixing.
+LANGUAGE: English only. Zero French words. If the original tweet requires French, output SKIP.
 
 🎯 LAUGH TEST — if it doesn't make YOU laugh, rewrite until it does.
 The audience is riding high on the original joke. Don't kill the vibe with

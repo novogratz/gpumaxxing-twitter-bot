@@ -503,6 +503,9 @@ that @{author} would happily LIKE because you're laughing WITH them at the
 world, not AT them.
 
 LAUGH FLOOR — non-negotiable:
+- Motto: GPU-maxxing loves AI. Every good reply should feel like an AI maximalist
+  with a GPU shrine laughing at obsolete thinking.
+- Be sarcastic. Make people laugh. If it reads like polite analysis, rewrite.
 - Default to POSTING a reply when the tweet is on-topic and safe. Only output
   SKIP if there is no factual hook, it is off-niche, or the only joke would hit
   the person/business instead of the idea.
@@ -512,11 +515,10 @@ LAUGH FLOOR — non-negotiable:
 - Every reply needs a punchline, not just agreement. If the reply could start
   with "oui" or "exact", delete it and find the joke.
 
-LANGUAGE — CRITICAL — MATCH THE PARENT TWEET:
-- Detect the language of the TWEET ABOVE.
-- FRENCH tweet -> FRENCH reply, use FR cultural references (fresh ones, NOT RER B/Bercy).
-- ENGLISH tweet -> ENGLISH reply. ZERO French references. Use EN cultural references (Wall Street, SEC, 401k, HOA, Chipotle, CVS, IRS, Craigslist, Venmo, LinkedIn).
-- If mixed/unclear -> match the dominant language. Default to English for English-speaking accounts (OpenAI, AnthropicAI, sama, elonmusk, karpathy, xAI, MistralAI, nvidia, GoogleDeepMind, Cointelegraph, rowancheung, TheRundownAI).
+LANGUAGE — CRITICAL — ENGLISH ONLY:
+- Write every reply in English.
+- ZERO French words. ZERO French cultural references.
+- If the parent tweet requires French to make sense, output SKIP.
 
 ⚠️ HARDLINE — what you NEVER touch ⚠️
 - Their BUSINESS, courses, coaching, formations, services, products, livelihood
@@ -568,7 +570,7 @@ STYLE — HARDCORE TROLL MODE:
 - TARGET OUTCOME: @{author} likes it, one random reader follows us, and someone
   can quote it as the funniest summary of the thread. Optimize for that.
 - PUSH THE JOKE. First draft is usually too polite: make it 30% more sarcastic,
-  more specific, and more French/terminally-online before output. We need
+  more specific, and more terminally-online before output. We need
   follow-worthy replies, not "nice point" replies.
 - IMPACT TEST: would a stranger follow us from this single reply? If not, SKIP.
 - Use one of: renaming, brutal understatement, absurd concrete comparison,
@@ -586,20 +588,6 @@ STYLE — HARDCORE TROLL MODE:
 - One joke per reply. Land it, don't explain it. Don't write the punchline twice.
 - Lowercase is fine on EN replies if it serves the deadpan. FR replies stay
   properly capitalized + accented.
-
-HUMOUR BY LANGUAGE:
-FRENCH replies (fresh refs, NO recycled RER B/Bercy):
-- Sec, deadpan, sarcastique. Pas américain-enthousiaste. Le rire français vient
-  du contraste, du sous-entendu, du "circulez y'a rien à voir".
-- Références fraîches: le linkedin coaching, le SUV en ville, le crypto-bro au
-  Starbucks, le RGPD qui sauve personne, le télétravail aboli, Threads vs X,
-  l'abonnement à tout, les influenceurs qui vendent des formations, "on accepte
-  Apple Pay", le compte à rebours avant la panne, la compta qui twerke en boîte,
-  le ticket resto pas accepté, le site qui plante le jour du Black Friday,
-  le rappel à l'ordre "ceci n'est pas un conseil financier", les tutos Defisko.
-- Tournures qui font rire en FR: "Magnifique." en réaction à un désastre.
-  "On se calme." sur du euphorique. "Bon courage." en commentaire de prédiction.
-  "Tout va bien." en pleine catastrophe. "Ça commence." sur du déjà-vu.
 
 ENGLISH replies (ZERO French refs — use American/global references):
 - Deadpan, absurdist, specific. Think HN comment, not SNL sketch.
@@ -707,7 +695,6 @@ RULES:
 - 60-220 characters. Short, brutal, screenshot-worthy. Shorter usually hits harder.
 - End on the funniest word when possible. No soft landing, no explanation.
 - Prefer one concrete image over one abstract opinion.
-- French replies: capital + impeccable accents (é è ê à â ù û ô î ç).
 - English replies: lower-case-deadpan is allowed when it serves the joke.
 - No em dashes (—). No emojis. No hashtags.
 - Clean grammar, no typos.
@@ -718,23 +705,16 @@ RULES:
 Output ONLY the reply, OR the literal word SKIP if no clean joke is possible."""
 
 
-def _generate_single_reply(author: str, tweet_text: str, lang: str = "fr"):
+def _generate_single_reply(author: str, tweet_text: str, lang: str = "en"):
     """Generate a single reply for a specific tweet."""
+    lang = "en"
     from . import personality_store
     persona_block = personality_store.render_account_block(author)
     hard_rules = personality_store.hard_rules_block()
-    # Hand-curated ideological core — voice anchor. Match parent tweet lang.
+    # Hand-curated ideological core — voice anchor. English-only account.
     core_identity = personality_store.render_core_identity(lang=lang)
     base = REPLY_PROMPT.format(author=author, tweet_text=tweet_text[:200])
-    if lang == "fr":
-        base += (
-            "\n\nTARGET LANGUAGE OVERRIDE: FRENCH ONLY.\n"
-            "The parent tweet is French. Reply in natural native French. "
-            "Do not use English words like 'the', 'market', 'portfolio', "
-            "'ride', 'ticket', 'bug', 'beta test', or 'rug'."
-        )
-    elif lang == "en":
-        base += "\n\nTARGET LANGUAGE OVERRIDE: ENGLISH ONLY."
+    base += "\n\nTARGET LANGUAGE OVERRIDE: ENGLISH ONLY. If you would need French, output SKIP."
     extras = []
     if persona_block:
         extras.append(persona_block)
@@ -764,8 +744,8 @@ def _generate_single_reply(author: str, tweet_text: str, lang: str = "fr"):
         # Honor model-emitted SKIP (e.g., blocklisted author)
         if reply.upper().strip() == "SKIP":
             return None
-        if lang == "fr" and _looks_english(reply):
-            log.info(f"[DIRECT_REPLY] Rejected English reply for French tweet: {reply[:120]!r}")
+        if _looks_french(reply):
+            log.info(f"[DIRECT_REPLY] Rejected French-looking reply in English-only mode: {reply[:120]!r}")
             return None
 
         return reply
@@ -994,7 +974,10 @@ def _reply_to_tweets(tweets, replied, source_name, source_detail="", remaining=N
             is_en_tweet = (_tl == "en")
         else:
             is_en_tweet = not _looks_french(text)
-        if is_en_tweet and en_counter is not None and en_counter[0] >= MAX_EN_REPLIES_PER_CYCLE:
+        if not is_en_tweet:
+            log.info(f"[{source_name}] English-only mode: skipping non-English tweet @{author}: {text[:60]}")
+            continue
+        if en_counter is not None and en_counter[0] >= MAX_EN_REPLIES_PER_CYCLE:
             log.info(f"[{source_name}] EN cap reached ({en_counter[0]}/{MAX_EN_REPLIES_PER_CYCLE}) — skipping EN tweet @{author}: {text[:60]}")
             continue
 
@@ -1008,8 +991,7 @@ def _reply_to_tweets(tweets, replied, source_name, source_detail="", remaining=N
             break
 
         log.info(f"[{source_name}] Generating reply for @{author}: {text[:60]}...")
-        _reply_lang = "en" if is_en_tweet else "fr"
-        reply = _generate_single_reply(author, text, lang=_reply_lang)
+        reply = _generate_single_reply(author, text, lang="en")
         if reply is _LLM_RATE_LIMITED:
             limited, used, max_calls, reset_seconds = llm_hourly_limit_status()
             log.info(
@@ -1149,7 +1131,7 @@ def run_direct_reply_cycle():
         try:
             following_tweets = scrape_following_feed(max_tweets=DIRECT_REPLY_FEED_SCAN_LIMIT)
             if following_tweets:
-                following_tweets.sort(key=lambda t: (0 if _looks_french(t.get("text", "")) else 1))
+                following_tweets.sort(key=lambda t: (0 if not _looks_french(t.get("text", "")) else 1))
                 total += _reply_to_tweets(following_tweets, replied, "FOLLOWING", remaining=_budget(), en_counter=en_counter)
                 if _llm_exhausted():
                     save_replied(replied)
@@ -1162,7 +1144,7 @@ def run_direct_reply_cycle():
         try:
             feed_tweets = scrape_home_feed(max_tweets=DIRECT_REPLY_FEED_SCAN_LIMIT)
             if feed_tweets:
-                feed_tweets.sort(key=lambda t: (0 if _looks_french(t.get("text", "")) else 1))
+                feed_tweets.sort(key=lambda t: (0 if not _looks_french(t.get("text", "")) else 1))
                 total += _reply_to_tweets(feed_tweets, replied, "FEED", remaining=_budget(), en_counter=en_counter)
                 if _llm_exhausted():
                     save_replied(replied)
@@ -1255,8 +1237,7 @@ def run_direct_reply_cycle():
                 break
 
     save_replied(replied)
-    fr_count = total - en_counter[0]
-    log.info(f"[DIRECT] Total: {total} replies (FR:{fr_count} EN:{en_counter[0]}, cap {DIRECT_REPLY_MAX_PER_CYCLE}).")
+    log.info(f"[DIRECT] Total: {total} English replies (cap {DIRECT_REPLY_MAX_PER_CYCLE}).")
 
 
 def safe_run_direct_reply_cycle():

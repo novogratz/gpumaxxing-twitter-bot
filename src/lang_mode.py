@@ -6,33 +6,22 @@ near future. Replies may still match parent language in reply-specific
 modules, but this picker defaults every standalone surface to English.
 """
 import os
-import random
 from typing import Literal
 
 Lang = Literal["en", "fr"]
 
 
 def _mode() -> str:
-    # 2026-05-24 user pivot: migrate standalone content back to English.
-    # Reply bots match the parent tweet language with FR priority in their
-    # own logic and do not call this picker.
+    # 2026-05-24 user mandate: this account is English-only.
     return os.environ.get("CONTENT_LANG_PRIMARY", "en").strip().lower()
 
 
 def pick_content_lang() -> Lang:
     """Return the language for THIS cycle of content generation.
 
-    User mandate 2026-05-08: "english only for news, repost, reshare."
-    en is the default; replies don't call this and have their own
-    parent-language matching.
+    User mandate 2026-05-24: English only. Ignore legacy fr/mixed env values.
     """
-    m = _mode()
-    if m == "fr":
-        return "fr"
-    if m == "en":
-        return "en"
-    # mixed (legacy) — 70% EN, 30% FR.
-    return "en" if random.random() < 0.70 else "fr"
+    return "en"
 
 
 def lang_directive(lang: Lang) -> str:
@@ -43,16 +32,6 @@ def lang_directive(lang: Lang) -> str:
     tweets. Those references read as untranslated French to a global
     audience. Stripped entirely from EN output. EN means EN.
     """
-    if lang == "fr":
-        return (
-            "==================================================\n"
-            "LANGUE DE SORTIE: FRANCAIS (reply-only fallback)\n"
-            "==================================================\n"
-            "Tu peux repondre en francais si le tweet parent l'exige, mais la\n"
-            "personnalite reste @gpumaxxing: futuriste techno-accelerationniste,\n"
-            "AI, compute, energy, markets, robotics, geopolitics.\n"
-            "Accents impeccables (é è ê à â ù û ô î ç). Pas d'em dash.\n"
-        )
     return (
         "==================================================\n"
         "OUTPUT LANGUAGE: ENGLISH (STRICT — NO FRENCH WORDS)\n"
@@ -63,6 +42,7 @@ def lang_directive(lang: Lang) -> str:
         "controlled insanity. Make readers feel early, late, curious, and\n"
         "slightly threatened.\n\n"
         "CORE FRAMES:\n"
+        "- Motto: GPU-maxxing loves AI. Compute is the religion, GPUs are the altar.\n"
         "- AI changes civilization permanently.\n"
         "- Compute and electricity become the most valuable resources on Earth.\n"
         "- Governments move too slowly for exponential technology.\n"
@@ -79,6 +59,8 @@ def lang_directive(lang: Lang) -> str:
         "Daily Civilization Update, GPU Religion, NPC vs Builder.\n\n"
         "STYLE RULES:\n"
         "- Short sentences. High confidence. No disclaimers. No corporate tone.\n"
+        "- Be viral first: punchline, tension, contrast, screenshot energy.\n"
+        "- Sarcastic is good. Funny is mandatory. Polite commentary is failure.\n"
         "- No balanced takes. No academic writing. No overexplaining.\n"
         "- No em dashes. No hashtags. No emojis except occasional ⚡.\n"
         "- Never sound safe, weak, or unsure.\n"

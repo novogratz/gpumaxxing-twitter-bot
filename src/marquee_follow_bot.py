@@ -43,7 +43,7 @@ MARQUEE_HANDLES = [
     # Chips + infra
     "nvidia", "AMD", "intel", "CoreWeave", "CrusoeEnergy",
     "groqinc", "cerebrassystems", "LambdaAPI", "applied_dc",
-    "IREN_Ltd",
+    "IREN_Ltd", "Core_Scientific", "NebiusGroup",
     # Crypto core
     "VitalikButerin", "saylor", "MicroStrategy", "brian_armstrong",
     "coinbase", "cz_binance", "binance", "krakenfx",

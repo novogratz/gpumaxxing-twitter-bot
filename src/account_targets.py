@@ -59,6 +59,8 @@ TIER3_DATACENTER_INFRA_ENERGY = [
     "CrusoeEnergy",
     "LambdaAPI",
     "applied_dc",
+    "Core_Scientific",
+    "NebiusGroup",
     "nvidia",
     "AMD",
     "TSMC",

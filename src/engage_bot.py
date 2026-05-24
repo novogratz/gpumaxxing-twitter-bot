@@ -11,6 +11,27 @@ from .account_targets import ALL_TARGET_ACCOUNTS
 
 FOLLOWED_FILE = os.path.join(_PROJECT_ROOT, "followed_accounts.json")
 MAX_SELECTIVE_FOLLOWS = int(os.environ.get("MAX_SELECTIVE_FOLLOWS", "400"))
+HIGH_CONVICTION_FOLLOW_ACCOUNTS = [
+    "CoreWeave",
+    "CrusoeEnergy",
+    "LambdaAPI",
+    "applied_dc",
+    "IREN_Ltd",
+    "TeraWulfInc",
+    "CipherMining",
+    "CleanSpark_Inc",
+    "MARAHoldings",
+    "RiotPlatforms",
+    "Hut8Corp",
+    "Core_Scientific",
+    "NebiusGroup",
+    "nvidia",
+    "AMD",
+    "ASMLcompany",
+    "TSMC",
+    "Oklo",
+    "AndurilTech",
+]
 
 
 def _load_discovered_handles() -> list:
@@ -152,10 +173,21 @@ def run_engage_cycle():
     # Apply autonomous evolution: filter pruned + double-weight reinforced accounts
     pool = filter_and_weight(TARGET_ACCOUNTS)
 
+    # High-conviction AI infra accounts get followed first when still pending.
+    # Random discovery still fills the rest of the cycle.
+    pending_priority = [
+        h for h in HIGH_CONVICTION_FOLLOW_ACCOUNTS
+        if h.lower() not in {f.lower() for f in followed} and h in pool
+    ]
+    random.shuffle(pending_priority)
+
     # Growth push 2026-05-06 PM: hit even more accounts per cycle (7-10 → 10-15).
     # User: 360 → 10k followers in a week. Volume is the lever.
     count = random.randint(10, 15)
-    picks = random.sample(pool, min(count, len(pool)))
+    priority_picks = pending_priority[:min(3, count)]
+    remaining_pool = [h for h in pool if h not in set(priority_picks)]
+    random_picks = random.sample(remaining_pool, min(count - len(priority_picks), len(remaining_pool)))
+    picks = priority_picks + random_picks
 
     log.info(f"[ENGAGE] Engaging with {len(picks)} accounts...")
     for username in picks:

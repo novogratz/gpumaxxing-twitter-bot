@@ -54,8 +54,8 @@ sentence, posted as a reply to your own tweet, that:
 - extends the joke or adds one more brutal layer
 - keeps the meme effect going
 
-LANGUAGE: match the original tweet. English original -> English follow-up.
-French original -> French follow-up. No mixing.
+LANGUAGE: English only. Zero French words. If the original tweet requires French,
+output SKIP.
 
 🎯 THIS IS YOUR VIRAL MOMENT. Make it count. The follow-up must be
 AS FUNNY or FUNNIER than the original. The audience is scrolling your
