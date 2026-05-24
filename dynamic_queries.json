@@ -1,5 +1,17 @@
 {
   "live": [
+    "AI agents compute bottleneck min_faves:100",
+    "AGI singularity robotics min_faves:100",
+    "e/acc AI accelerationism min_faves:50",
+    "datacenter power demand AI min_faves:50",
+    "hyperscaler capex AI datacenter min_faves:50",
+    "nuclear energy datacenter AI min_faves:50",
+    "semiconductor GPU supply chain min_faves:50",
+    "US China AI race compute min_faves:100",
+    "military AI autonomous drones min_faves:50",
+    "cyberpunk AI future memes min_faves:50",
+    "finance meme AI bubble min_faves:100",
+    "techno capitalism AI min_faves:50",
     "AI datacenter power grid GPUs min_faves:50",
     "Nvidia Blackwell datacenter energy min_faves:50",
     "OpenAI Stargate compute power min_faves:50",
@@ -17,6 +29,13 @@
     "Bittensor decentralized compute AI crypto min_faves:20"
   ],
   "hot": [
+    "AI agents OR AGI OR singularity lang:en min_faves:300",
+    "compute bottleneck OR GPU shortage OR inference economy lang:en min_faves:200",
+    "hyperscaler capex OR AI capex OR datacenter buildout lang:en min_faves:200",
+    "US China AI race OR compute wars OR export controls lang:en min_faves:200",
+    "defense AI OR autonomous drones OR military tech lang:en min_faves:150",
+    "e/acc OR accelerationism OR techno-capitalism lang:en min_faves:100",
+    "cyberpunk OR AI future OR civilization acceleration lang:en min_faves:100",
     "AI infrastructure min_faves:500",
     "compute wars min_faves:300",
     "datacenter civilization min_faves:100",

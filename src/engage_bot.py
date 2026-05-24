@@ -7,8 +7,10 @@ import traceback
 from .logger import log
 from .config import _PROJECT_ROOT, DISCOVERED_ACCOUNTS_FILE, BLOCKLIST
 from .twitter_client import visit_profile_and_like, follow_account
+from .account_targets import ALL_TARGET_ACCOUNTS
 
 FOLLOWED_FILE = os.path.join(_PROJECT_ROOT, "followed_accounts.json")
+MAX_SELECTIVE_FOLLOWS = int(os.environ.get("MAX_SELECTIVE_FOLLOWS", "400"))
 
 
 def _load_discovered_handles() -> list:
@@ -123,8 +125,8 @@ TARGET_ACCOUNTS = [
     "Yoshua_Bengio", "Montreal_AI",
 ]
 
-# Append discovered handles, then dedup
-TARGET_ACCOUNTS = list(dict.fromkeys(TARGET_ACCOUNTS + _load_discovered_handles()))
+# Append gpumaxxing target universe + discovered handles, then dedup.
+TARGET_ACCOUNTS = list(dict.fromkeys(TARGET_ACCOUNTS + ALL_TARGET_ACCOUNTS + _load_discovered_handles()))
 
 
 def _load_followed() -> set:
@@ -158,13 +160,15 @@ def run_engage_cycle():
     log.info(f"[ENGAGE] Engaging with {len(picks)} accounts...")
     for username in picks:
         try:
-            if username not in followed:
+            if username not in followed and len(followed) < MAX_SELECTIVE_FOLLOWS:
                 log.info(f"[ENGAGE] Following + liking @{username}...")
                 if follow_account(username):
                     followed.add(username)
                 # If JS-click didn't fire, skip the followed.add so we retry next cycle.
                 # The like-pass below still runs regardless — engagement happens either way.
                 time.sleep(random.randint(2, 4))
+            elif username not in followed:
+                log.info(f"[ENGAGE] Follow cap reached ({MAX_SELECTIVE_FOLLOWS}); liking @{username} without following.")
 
             like_count = 5 if username in TARGET_ACCOUNTS[:40] else 3
             log.info(f"[ENGAGE] Liking @{username}'s latest tweets...")

@@ -14,6 +14,11 @@ from .config import BLOCKLIST, BOT_HANDLE
 from .humanizer import humanize
 from .engagement_log import log_reply
 from .dynamic_strategy import get_dynamic_queries, get_dynamic_accounts
+from .account_targets import (
+    GPUMAXXING_SEARCH_QUERIES,
+    MEDIUM_SIZED_DISCOVERY_SEARCHES,
+    PRIORITY_REPLY_ACCOUNTS as GPUMAXXING_PRIORITY_REPLY_ACCOUNTS,
+)
 
 _OWN_HANDLE = BOT_HANDLE.lower()
 _LLM_RATE_LIMITED = object()
@@ -22,6 +27,7 @@ FAVORITE_REPOST_MIN_ENGAGEMENT = int(os.environ.get("FAVORITE_REPOST_MIN_ENGAGEM
 FAVORITE_REPOST_MAX_AGE_MINUTES = int(os.environ.get("FAVORITE_REPOST_MAX_AGE_MINUTES", "2880"))
 
 VIP_REPLY_ACCOUNTS = [
+    *GPUMAXXING_PRIORITY_REPLY_ACCOUNTS,
     "Graphseo",          # Julien Flot
     "RodolpheSteffan",
     "vision_ia",         # VISION IA
@@ -354,6 +360,7 @@ FR_ACCOUNTS = [
 
 # English-speaking influencers — visited only AFTER FR, fewer per cycle
 EN_ACCOUNTS = [
+    *GPUMAXXING_PRIORITY_REPLY_ACCOUNTS,
     "novogratz",         # Mike Novogratz — user VIP 2026-05-02
     "jbelizaireCEO",     # John Belizaire — user VIP 2026-05-02
     "Cointelegraph",
@@ -416,6 +423,8 @@ PRIORITY_ACCOUNTS = FR_ACCOUNTS + EN_ACCOUNTS
 # X search queries — FR FIRST. min_faves: surfaces tweets that already have heat
 # (so the dead-tweet filter doesn't kill our entire pipeline).
 SEARCH_QUERIES = [
+    *GPUMAXXING_SEARCH_QUERIES,
+    *MEDIUM_SIZED_DISCOVERY_SEARCHES,
     # Hot tweets (already engaged, guaranteed alive)
     "IA OR ChatGPT lang:fr min_faves:30",
     "Bitcoin OR crypto OR Ethereum lang:fr min_faves:30",
@@ -440,6 +449,7 @@ SEARCH_QUERIES = [
 # hottest French tweets right now in our niches. "Claude AI" quoted phrase
 # avoids matching the common French first name (CNEWS false positives).
 HOT_TAB_QUERIES = [
+    *GPUMAXXING_SEARCH_QUERIES,
     "\"Claude AI\" OR \"Claude Code\" OR ClaudeCode OR \"Claude Anthropic\" lang:fr min_faves:10",
     "IA lang:fr min_faves:20",
     "Bitcoin lang:fr min_faves:20",
@@ -461,6 +471,17 @@ DIRECT_REPLY_MAX_AGE_MINUTES = int(os.environ.get("DIRECT_REPLY_MAX_AGE_MINUTES"
 REPLY_PROMPT = """You are @gpumaxxing. The SHARPEST shitposter on Finance/Crypto/AI Twitter.
 Imagine a hybrid of Naval and a 4chan native who actually reads the 10-K. Hardcore
 troll energy aimed at IDEAS — never people. The timeline screenshots your replies.
+
+GPUMAXXING REPLY STYLE:
+- Be adjacent to e/acc, techno-capitalism, AI accelerationism, and compute wars.
+- Sound smarter than the original tweet, but shorter.
+- Compress the strongest frame into one quotable line.
+- Preferred move: reveal the infrastructure layer under the headline.
+- Never sound like a generic crypto bro or an angry political account.
+
+Example:
+Original: "Meta is investing billions into AI."
+Reply: "AI companies are quietly transforming into energy companies."
 
 Here is a tweet from @{author}:
 "{tweet_text}"

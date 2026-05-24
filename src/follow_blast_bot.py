@@ -32,14 +32,17 @@ import webbrowser
 from .config import _PROJECT_ROOT, BOT_HANDLE, get_live_cap
 from .logger import log
 from .twitter_client import _safari_lock, close_front_tab, _scroll_page
+from .account_targets import MEDIUM_SIZED_DISCOVERY_SEARCHES
 
-FOLLOWS_PER_CYCLE = int(os.environ.get("FOLLOW_BLAST_PER_CYCLE", "40"))
-FOLLOW_BLAST_DAILY_CAP = int(os.environ.get("FOLLOW_BLAST_DAILY_CAP", "650"))
+FOLLOWS_PER_CYCLE = int(os.environ.get("FOLLOW_BLAST_PER_CYCLE", "5"))
+FOLLOW_BLAST_DAILY_CAP = int(os.environ.get("FOLLOW_BLAST_DAILY_CAP", "40"))
+MAX_SELECTIVE_FOLLOWS = int(os.environ.get("MAX_SELECTIVE_FOLLOWS", "400"))
 FOLLOW_BLAST_STATE_FILE = os.path.join(_PROJECT_ROOT, "follow_blast_state.json")
 
 # English niche search queries. Rotated per cycle. The min_faves floor keeps
 # us out of bot-farm zones — we want real global AI / crypto users.
 BLAST_QUERIES = [
+    *MEDIUM_SIZED_DISCOVERY_SEARCHES,
     "AI datacenter lang:en min_faves:25",
     "AI infrastructure lang:en min_faves:25",
     "power demand AI lang:en min_faves:25",
@@ -109,15 +112,19 @@ def _load_daily_state() -> dict:
     from datetime import date
     today = date.today().isoformat()
     if not os.path.exists(FOLLOW_BLAST_STATE_FILE):
-        return {"date": today, "count": 0}
+        return {"date": today, "count": 0, "total_count": 0}
     try:
         with open(FOLLOW_BLAST_STATE_FILE, "r") as f:
             state = json.load(f) or {}
     except (OSError, json.JSONDecodeError):
-        return {"date": today, "count": 0}
+        return {"date": today, "count": 0, "total_count": 0}
     if state.get("date") != today:
-        return {"date": today, "count": 0}
-    return {"date": today, "count": int(state.get("count") or 0)}
+        return {"date": today, "count": 0, "total_count": int(state.get("total_count") or 0)}
+    return {
+        "date": today,
+        "count": int(state.get("count") or 0),
+        "total_count": int(state.get("total_count") or 0),
+    }
 
 
 def _save_daily_state(state: dict) -> None:
@@ -150,7 +157,11 @@ def run_follow_blast_cycle():
     except Exception:
         pass
     state = _load_daily_state()
+    if int(state.get("total_count") or 0) >= MAX_SELECTIVE_FOLLOWS:
+        log.info(f"[FOLLOW-BLAST] Overall selective follow cap reached ({MAX_SELECTIVE_FOLLOWS}) — skipping.")
+        return
     remaining = max(0, FOLLOW_BLAST_DAILY_CAP - int(state.get("count") or 0))
+    remaining = min(remaining, max(0, MAX_SELECTIVE_FOLLOWS - int(state.get("total_count") or 0)))
     if remaining <= 0:
         log.info(f"[FOLLOW-BLAST] Daily cap reached ({FOLLOW_BLAST_DAILY_CAP}) — skipping.")
         return
@@ -179,6 +190,7 @@ def run_follow_blast_cycle():
         close_front_tab()
 
     state["count"] = int(state.get("count") or 0) + max(0, clicked)
+    state["total_count"] = int(state.get("total_count") or 0) + max(0, clicked)
     _save_daily_state(state)
     log.info(
         f"[FOLLOW-BLAST] Followed {clicked} accounts on '{query}' "

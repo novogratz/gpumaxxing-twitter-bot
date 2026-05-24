@@ -51,6 +51,10 @@ from .logger import log
 from .twitter_client import retweet_post, scrape_following_feed, scrape_home_feed, scrape_profile_tweets, scrape_x_search
 from .engagement_log import log_reply
 from .humanizer import humanize, strip_agent_preamble
+from .account_targets import (
+    GPUMAXXING_SEARCH_QUERIES,
+    RETWEET_SOURCE_HANDLES,
+)
 
 # State files
 RETWEETED_FILE = os.path.join(_PROJECT_ROOT, "retweeted.json")
@@ -130,6 +134,7 @@ FEED_REPOST_MIN_ENGAGEMENT = int(os.environ.get("FEED_REPOST_MIN_ENGAGEMENT", "1
 FEED_SEARCHES_PER_CYCLE = int(os.environ.get("RETWEET_FEED_SEARCHES_PER_CYCLE", "8"))
 
 FEED_REPOST_SEARCH_QUERIES = [
+    *GPUMAXXING_SEARCH_QUERIES,
     # English-only big-post discovery. Same-day age and niche gates still apply.
     "AI datacenter OR power demand OR megawatt lang:en min_faves:500",
     "CoreWeave OR CRWV OR APLD OR IREN OR HIVE lang:en min_faves:300",
@@ -202,6 +207,7 @@ FR_TRUSTED_HANDLES = [
 ]
 
 EN_TRUSTED_HANDLES = [
+    *RETWEET_SOURCE_HANDLES,
     # Wires / global financial press
     "Reuters",
     "ReutersBiz",

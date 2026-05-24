@@ -24,6 +24,7 @@ from .reply_bot import load_replied, save_replied, _tweet_age_minutes, _handle_f
 from .direct_reply import _LLM_RATE_LIMITED, _generate_single_reply, _is_on_niche
 from .engagement_log import log_reply
 from .humanizer import humanize
+from .account_targets import EARLY_BIRD_ACCOUNTS as GPUMAXXING_EARLY_BIRD_ACCOUNTS
 
 _OWN_HANDLE = BOT_HANDLE.lower()
 
@@ -35,6 +36,7 @@ _OWN_HANDLE = BOT_HANDLE.lower()
 # anywhere in this list has a real shot of being caught inside the 12-min
 # top-5-reply window. FR media is HEAVY because that's our audience.
 EARLY_BIRD_ACCOUNTS = [
+    *GPUMAXXING_EARLY_BIRD_ACCOUNTS,
     # === User VIP list 2026-05-02 ===
     "Graphseo", "RodolpheSteffan", "vision_ia", "FinTales_", "novogratz", "jbelizaireCEO",
     "FlasheurInvest", "McnallieM",
