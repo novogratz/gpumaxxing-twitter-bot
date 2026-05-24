@@ -165,7 +165,20 @@ def render_signal_block(max_items: int = 8) -> str:
             d = json.load(f)
     except Exception:
         return ""
-    items = (d.get("items") or [])[:max_items]
+    used_urls = set()
+    try:
+        from .history import get_recent_urls, normalize_url
+        used_urls = get_recent_urls(hours=168)
+    except Exception:
+        normalize_url = lambda u: u  # noqa: E731
+
+    items = []
+    for it in d.get("items") or []:
+        if normalize_url(it.get("url") or "") in used_urls:
+            continue
+        items.append(it)
+        if len(items) >= max_items:
+            break
     if not items:
         return ""
     lines = ["==================================================",

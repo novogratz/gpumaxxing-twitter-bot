@@ -11,7 +11,7 @@ from .logger import log
 from .agent import generate_tweet
 from .hotake_agent import generate_hotake
 from .twitter_client import post_tweet
-from .history import save_tweet
+from .history import save_tweet, get_recent_urls, normalize_url
 from .engagement_log import log_post, log_hotake
 from .humanizer import humanize
 
@@ -31,6 +31,7 @@ NEWS_POSTS_PER_CYCLE = int(os.environ.get("NEWS_POSTS_PER_CYCLE", "3"))
 NEWS_POST_SPACING_SECONDS = int(os.environ.get("NEWS_POST_SPACING_SECONDS", "120"))
 ORIGINAL_HASHTAG_PROB = float(os.environ.get("ORIGINAL_HASHTAG_PROB", "0.1"))
 _CURATED_HASHTAGS = ("#Crypto", "#AI", "#Bitcoin")
+_URL_RE = re.compile(r"https?://\S+")
 
 
 def _maybe_add_curated_hashtag(text: str) -> str:
@@ -42,6 +43,20 @@ def _maybe_add_curated_hashtag(text: str) -> str:
     if "#AI" not in text and len(text) + 4 < 280:
         return text + " #AI"
     return text
+
+
+def _has_recent_source_repeat(text: str, source_url: str | None = None) -> bool:
+    """True when a generated post reuses a recently-posted article URL."""
+    recent_urls = get_recent_urls(hours=168)
+    candidates = {normalize_url(u) for u in _URL_RE.findall(text or "")}
+    if source_url:
+        candidates.add(normalize_url(source_url))
+    candidates.discard("")
+    repeated = candidates & recent_urls
+    if repeated:
+        log.info(f"[POST] Skipping duplicate source already posted recently: {sorted(repeated)[0]}")
+        return True
+    return False
 
 
 def _load_daily_state() -> dict:
@@ -131,13 +146,15 @@ def _run_single_bot_cycle() -> bool:
         log.info("Generating short-form viral tweet...")
         tweet = generate_hotake()
         if tweet:
-            _increment_counter("hotakes")
             tweet = humanize(tweet)
             tweet = _maybe_add_curated_hashtag(tweet)
             
             from .hotake_agent import last_source_url, last_pattern
             src_url = last_source_url()
             pattern = last_pattern() or "LAUNCH_MANIFESTO"
+            if _has_recent_source_repeat(tweet, src_url):
+                return False
+            _increment_counter("hotakes")
             
             # URL stays in body — no self-reply
 
@@ -151,12 +168,14 @@ def _run_single_bot_cycle() -> bool:
         log.info("Generating original content...")
         tweet = generate_tweet()
         if tweet:
-            _increment_counter("news")
             tweet = humanize(tweet)
             
             from .agent import last_source_url, last_pattern
             src_url = last_source_url()
             pattern = last_pattern() or "RECURRING_SERIES"
+            if _has_recent_source_repeat(tweet, src_url):
+                return False
+            _increment_counter("news")
 
             # URL always stays in body — no self-reply leak pattern
 

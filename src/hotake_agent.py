@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 from typing import Optional, Sequence
 from .config import HOTAKE_MODEL, _PROJECT_ROOT
 from .logger import log
-from .history import get_recent_tweets
+from .history import get_recent_tweets, get_recent_urls, normalize_url
 from .llm_client import run_llm, unwrap_text
 from .performance import get_learnings_for_prompt
 
@@ -117,10 +117,20 @@ def _url_publication_date(url: str):
 def generate_hotake() -> Optional[str]:
     """Generate a meme-style hot take (smart, sharp, philosophical, funny)."""
     recent = get_recent_tweets(hours=48)
-    banned = extract_recent_topics(recent)
+    try:
+        from .topic_dedup import extract_recent_topics as _extract_recent_topics
+        banned = _extract_recent_topics(recent)
+    except Exception:
+        banned = extract_recent_topics(recent)
+    recent_urls = get_recent_urls(hours=168)
     dedup_section = ""
     if banned:
         dedup_section = f"RECENTLY COVERED (AVOID): {', '.join(banned)}"
+    if recent_urls:
+        used = "\n".join(f"- {url}" for url in sorted(recent_urls))
+        dedup_section = (
+            f"{dedup_section}\n" if dedup_section else ""
+        ) + f"RECENTLY POSTED SOURCE URLS (DO NOT USE):\n{used}"
 
     perf = get_learnings_for_prompt()
     performance_section = f"LEARNINGS FROM PAST PERFORMANCE:\n{perf}" if perf else ""
@@ -171,16 +181,23 @@ def generate_hotake() -> Optional[str]:
 
     url_match = _HOTAKE_URL_RE.search(tweet)
     if url_match:
-        url = url_match.group(0)
+        url = normalize_url(url_match.group(0))
+        if url in recent_urls:
+            log.info(f"[HOTAKE] Source already posted recently, skipping: {url}")
+            globals()["_last_source_url"] = None
+            return None
         if _is_rejected_source(url):
             log.info(f"[HOTAKE] Stale/Bad source rejected: {url}")
+            globals()["_last_source_url"] = None
             return None
         if not _validate_url(url):
             log.info(f"[HOTAKE] URL unreachable ({url}) — regenerating post without it")
-            tweet = tweet.replace(url, "")
+            tweet = tweet.replace(url_match.group(0), "")
             tweet = re.sub(r'\s+', ' ', tweet).strip()
-        globals()["_last_source_url"] = url
-        log.info(f"[HOTAKE] Source URL found: {url}")
+            globals()["_last_source_url"] = None
+        else:
+            globals()["_last_source_url"] = url
+            log.info(f"[HOTAKE] Source URL found: {url}")
     else:
         globals()["_last_source_url"] = None
         allowed_sourceless = {"FUTURE_LEAK", "MARKET_REPRICE", "COMPUTE_CULT", "NPC_BUILDER", "ENERGY_MONEY"}

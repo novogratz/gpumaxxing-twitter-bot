@@ -52,7 +52,7 @@ PERFORMANCE_LOG_FILE = os.path.join(_PROJECT_ROOT, "performance_log.json")
 
 # Paths we're allowed to mutate. Anything else from the LLM gets rejected.
 ALLOWED_PATHS = {
-    "caps.MAX_NEWS_PER_DAY":      (4, 8),
+    "caps.MAX_NEWS_PER_DAY":      (1, 2),
     "caps.MAX_HOTAKES_PER_DAY":   (2, 5),
     "caps.MAX_BREAKOUTS_PER_DAY": (0, 20),
     "caps.MAX_SPICY_PER_DAY":     (0, 20),

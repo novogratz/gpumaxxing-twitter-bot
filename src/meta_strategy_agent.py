@@ -36,7 +36,7 @@ META_LOG_FILE = os.path.join(_PROJECT_ROOT, "meta_strategy_log.json")
 # Bounds the agent can NOT cross — safety rails so a bad cycle can't
 # explode caps to 1000 or freeze the bot at 0.
 _BOUNDS = {
-    "MAX_NEWS_PER_DAY":      (4,  8),
+    "MAX_NEWS_PER_DAY":      (1,  2),
     "MAX_HOTAKES_PER_DAY":   (2,  5),
     "MAX_QUOTES_PER_DAY":    (4,  60),
     "MAX_RETWEETS_PER_DAY":  (8,  30),

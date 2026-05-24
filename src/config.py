@@ -33,9 +33,9 @@ REPLIED_FILE = os.path.join(_PROJECT_ROOT, "replied_tweets.json")
 ENGAGEMENT_LOG_FILE = os.path.join(_PROJECT_ROOT, "engagement_log.csv")
 DAILY_STATE_FILE = os.path.join(_PROJECT_ROOT, "daily_state.json")
 
-# Daily posting limits. Defaults enforce the GPUMAXXING content engine:
-# ~12 short-form viral tweets + ~5 recurring/medium-form takes per day.
-MAX_NEWS_PER_DAY = int(os.environ.get("MAX_NEWS_PER_DAY", "5"))
+# Daily posting limits. Keep original news scarce; growth comes from
+# retweets, likes, follows, and replies.
+MAX_NEWS_PER_DAY = int(os.environ.get("MAX_NEWS_PER_DAY", "2"))
 MAX_HOTAKES_PER_DAY = int(os.environ.get("MAX_HOTAKES_PER_DAY", "15"))
 MAX_QUOTES_PER_DAY = int(os.environ.get("MAX_QUOTES_PER_DAY", "40"))
 MAX_REPLIES_PER_CYCLE = int(os.environ.get("MAX_REPLIES_PER_CYCLE", "3"))

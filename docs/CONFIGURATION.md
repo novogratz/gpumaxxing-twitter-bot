@@ -39,7 +39,7 @@ Original content uses LLM cycles + appears on the profile feed; the cap balances
 
 | Variable | Default | Purpose |
 |---|---|---|
-| `MAX_NEWS_PER_DAY` | `5` | Recurring/medium-form takes following the GPUMAXXING engine. |
+| `MAX_NEWS_PER_DAY` | `2` | Original news cap; growth should come from retweets, likes, and replies. |
 | `MAX_HOTAKES_PER_DAY` | `15` | Short-form viral tweets (Signals, Leaks, etc.). |
 | `MAX_BREAKOUTS_PER_DAY` | `4` | Breakout reactions to viral stories. |
 | `MAX_SPICY_PER_DAY` | `4` | Polarizing takes / questions. |

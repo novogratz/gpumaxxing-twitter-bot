@@ -124,7 +124,7 @@ Every knob is an environment variable in `.env`. Defaults are tuned for an Engli
 | `REPLY_MODEL` | `gpt-5.4-mini` | Model for replies (volume surface) |
 | `LLM_ENFORCE_BUDGET` | `0` | `0` = soft accounting only; `1` = hard-stop local LLM calls at configured budgets |
 | `LLM_MIN_SECONDS_BETWEEN_CALLS` | `15` | Spacing guardrail to avoid bursty overlapping CLI calls |
-| `MAX_NEWS_PER_DAY` | `5` | Cap on Décode insight posts |
+| `MAX_NEWS_PER_DAY` | `2` | Cap on original news posts |
 | `NEWS_POSTS_PER_CYCLE` | `3` | News posts to burst per cycle; set to `1` for one-shot (fail → skip) |
 | `MAX_HOTAKES_PER_DAY` | `3` | Cap on quick takes |
 | `MAX_QUOTES_PER_DAY` | `80` | Cap on the legacy repost-pool job |
