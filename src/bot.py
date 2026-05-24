@@ -13,7 +13,7 @@ from .hotake_agent import generate_hotake
 from .twitter_client import post_tweet
 from .history import save_tweet, get_recent_urls, normalize_url
 from .engagement_log import log_post, log_hotake
-from .humanizer import humanize
+from .humanizer import humanize, format_standalone_post
 
 
 def _live_news_cap() -> int:
@@ -147,6 +147,7 @@ def _run_single_bot_cycle() -> bool:
         tweet = generate_hotake()
         if tweet:
             tweet = humanize(tweet)
+            tweet = format_standalone_post(tweet)
             tweet = _maybe_add_curated_hashtag(tweet)
             
             from .hotake_agent import last_source_url, last_pattern
@@ -169,6 +170,7 @@ def _run_single_bot_cycle() -> bool:
         tweet = generate_tweet()
         if tweet:
             tweet = humanize(tweet)
+            tweet = format_standalone_post(tweet)
             
             from .agent import last_source_url, last_pattern
             src_url = last_source_url()

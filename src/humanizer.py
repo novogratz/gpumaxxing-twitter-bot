@@ -204,3 +204,54 @@ def humanize(text: str) -> str:
         result = result[0].upper() + result[1:]
 
     return result
+
+
+def format_standalone_post(text: str, max_chars: int = 240) -> str:
+    """Make original posts readable on X: short, line-broken, no wall text."""
+    if not text:
+        return ""
+
+    url_match = re.search(r"https?://\S+", text)
+    url = ""
+    if url_match:
+        url = url_match.group(0).strip().rstrip(").,!?;:'\"")
+        text = (text[:url_match.start()] + text[url_match.end():]).strip()
+
+    text = re.sub(r"\s+", " ", text).strip()
+    text = re.sub(r"\s+-\s*$", "", text).strip()
+    text = re.sub(r"\s+-\s+(?:get better|fix|todo|note).*$", "", text, flags=re.IGNORECASE).strip()
+
+    sentences = [
+        s.strip()
+        for s in re.split(r"(?<=[.!?])\s+", text)
+        if s.strip()
+    ]
+    filler_re = re.compile(
+        r"^(?:the\s+)?(?:headline|story|real story|takeaway)\s+is\b|^this\s+is\s+about\b",
+        re.IGNORECASE,
+    )
+    substantive = [s for s in sentences if len(s) >= 45 and not filler_re.search(s)]
+    if substantive:
+        sentences = substantive + [s for s in sentences if s not in substantive and not filler_re.search(s)]
+    if not sentences:
+        sentences = [text]
+
+    url_budget = len(url) + 2 if url else 0
+    budget = max(80, max_chars - url_budget)
+    picked = []
+    total = 0
+    for sentence in sentences:
+        if not picked and len(sentence) > budget:
+            sentence = sentence[:budget].rsplit(" ", 1)[0].rstrip(".,;:") + "."
+        candidate_len = len(sentence) + (2 if picked else 0)
+        if picked and total + candidate_len > budget:
+            break
+        picked.append(sentence)
+        total += candidate_len
+        if len(picked) >= 3:
+            break
+
+    body = "\n\n".join(picked).strip()
+    if url:
+        return f"{body}\n\n{url}".strip()
+    return body
